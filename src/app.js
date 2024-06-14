@@ -1,42 +1,42 @@
-import express from "express"
-import config from "./config"
-import cors from "cors"
-import jwt from "jsonwebtoken"
+import express from "express";
+import config from "./config";
+import cors from "cors";
+import path from "path";
+import userRoutes from "../src/routes/usuario.routes";
+import postRoutes from "../src/routes/publicaciones.routes";
+import commentsRoutes from "../src/routes/comentarios.routes";
 
 const app = express();
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/'); // Ruta donde se guardarán los archivos de imagen
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname)); // Nombre único para cada archivo
+    }
+});
+
+const upload = multer({ storage: storage });
+
 let port;
 
-//const publicRoutes = []
-
+// Configuración del puerto
 app.set('port', port || config.port);
 
+// Middlewares
+app.use(upload.single('Imagen'));
 app.use(express.json());
 app.use(cors({ origin: "*" }));
 
-// app.use((req, res, next) => {
-//     if (publicRoutes.includes(req.path)) {
-//         return next();
-//     }
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+app.use(express.urlencoded({ extended: false }));
 
-//     const token = req.headers.authorization && req.headers.authorization.split(" ")[1];
-
-//     if (!token) {
-//         return res.status(401).json({ message: "Hermano te olvidaste de mandarme el token" });
-//     }
-
-//     jwt.verify(token, config.SecretWord, (err, decoded) => {
-//         if (err) {
-//             return res.status(403).json({ message: "Failed to authenticate token" });
-//         }
-//         req.decoded = decoded;
-//         next();
-//     });
-// });
-
-app.use(express.urlencoded({extended: false}));
-
-//*AQUI VAN LAS RUTAS 
-
+// Rutas
+app.use(userRoutes);
+app.use(postRoutes);
+app.use(commentsRoutes);
 
 export default app;
